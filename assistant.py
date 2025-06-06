@@ -4,9 +4,7 @@ import os
 import re
 from dotenv import load_dotenv
 
-load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 BLOCKED_PATTERNS = [
@@ -61,11 +59,7 @@ Examples:
     ]
 
     response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json"
-        },
+        "https://win-dos-proxy.vercel.app/api/chat",
         json={
             "model": MODEL,
             "messages": messages,
