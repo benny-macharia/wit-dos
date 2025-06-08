@@ -1,11 +1,8 @@
 import subprocess
 import requests
-import os
 import re
-from dotenv import load_dotenv
 
-
-MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+BACKEND_URL = "https://win-dos-proxy.vercel.app/api/chat"
 
 BLOCKED_PATTERNS = [
     r'del\s+.*\\(Windows|System32)',
@@ -17,7 +14,7 @@ BLOCKED_PATTERNS = [
 ]
 
 SAFE_PATTERNS = [
-    r'^start\s+',  
+    r'^start\s+',
     r'^explorer\s+',
     r'^dir\s',
     r'^cd\s',
@@ -41,53 +38,33 @@ def is_safe(command):
     return False
 
 def get_smart_command(user_input):
-    system_prompt = """
-You are a helpful Windows AI assistant that translates natural language into valid Windows shell commands.
-You must ONLY respond with the exact command to execute. 
-
-Examples:
-- "open the camera" -> start microsoft.windows.camera:
-- "open calculator" -> start calc
-- "launch Notion" -> start notion
-- "open vscode" -> start code
-- "show my pictures folder" -> start "" "%USERPROFILE%\\Pictures"
-"""
-
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_input}
-    ]
-
-    response = requests.post(
-        "https://win-dos-proxy.vercel.app/api/chat",
-        json={
-            "model": MODEL,
-            "messages": messages,
-            "temperature": 0.2
-        }
-    )
-
-    if response.status_code == 200:
-        cmd = response.json()["choices"][0]["message"]["content"].strip()
-        return cmd
-    else:
-        print("[Error from Groq API]:", response.text)
+    try:
+        response = requests.post(
+            BACKEND_URL,
+            json={"prompt": user_input},
+            timeout=10
+        )
+        if response.status_code == 200:
+            return response.json()["choices"][0]["message"]["content"].strip()
+        else:
+            print("[❌ LLM Error]:", response.text)
+            return None
+    except requests.RequestException as e:
+        print("[❌ Request failed]:", e)
         return None
 
 def run_command_safely(command):
     try:
-        # dangerous
         if is_blocked(command):
             print(f"❌ BLOCKED: {command}")
             print("This command is not allowed for security reasons.")
             return
-        
-        # Safe
+
         if is_safe(command):
             print(f"✅ [EXECUTING]: {command}")
             subprocess.Popen(command, shell=True)
             return
-        
+
         print(f"\n⚠️ Confirmation needed for: {command}")
         confirm = input("Continue? (y/n): ").lower()
         if confirm in ['y', 'yes']:
