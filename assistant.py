@@ -51,6 +51,18 @@ SAFE_PATTERNS = [
     r'^ipconfig'
 ]
 
+def show_banner(): 
+    banner = """
+     __          ___ _   ____a_            
+     \ \        / (_) | |  __ \           
+      \ \  /\  / / _| |_| |  | | ___  ___ 
+       \ \/  \/ / | | __| |  | |/ _ \/ __|
+        \  /\  /  | | |_| |__| | (_) \__ \\
+         \/  \/   |_|\__|_____/ \___/|___/
+    """
+    print(banner)
+
+
 class FileIndexer:
     def __init__(self, db_path="./chroma_db"):
         self.client = chromadb.PersistentClient(path=db_path)
@@ -286,6 +298,7 @@ def initialize_index():
     print(f"✅ Indexed {total_indexed} files total.")
 
 if __name__ == "__main__":
+    show_banner()
     print("🤖 Wit-dos Windows Assistant with File Search (type 'exit' to quit)")
     print("💡 Try: 'open any files about my resume' ")
     
